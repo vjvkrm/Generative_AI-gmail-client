@@ -38,7 +38,8 @@ npm run dev
  Important: add your email which you want to connect as test email in google cloud project when running app locally .
 
 ## LocalHost : user Loging. 
-<img width="882" alt="Screenshot 2024-11-15 at 09 53 26" src="https://github.com/user-attachments/assets/0c98b5ed-1b36-4d79-b792-e1dfcd2355f8">
+<img width="869" alt="Screenshot 2024-11-15 at 09 53 01" src="https://github.com/user-attachments/assets/13fd7504-de46-4c89-bf01-f90450b7e86b">
+
 
 
 ## Choose your email account to sync 
