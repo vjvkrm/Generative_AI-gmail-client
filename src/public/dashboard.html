@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generative AI Email Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .email-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .email-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .email-item:hover {
+            background-color: #f8f9fa;
+        }
+        .email-content {
+            flex: 1;
+        }
+        .email-subject {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .email-snippet {
+            color: #666;
+            font-size: 14px;
+        }
+        .email-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .compose-btn {
+            background-color: #4285f4;
+            color: white;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .reply-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 60%;
+            border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .compose-form input, .compose-form textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .email-detail {
+            padding: 20px;
+        }
+        .email-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .email-body {
+            white-space: pre-wrap;
+        }
+        .email-metadata {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .ai-classification {
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        .ai-importance {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .ai-summary {
+            margin-top: 4px;
+            font-style: italic;
+            color: #495057;
+        }
+        .important-email {
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Email Dashboard</h1>
+            <button class="btn compose-btn" onclick="openComposeModal()">Compose</button>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search emails...">
+            <button class="btn compose-btn" onclick="searchEmails()">Search</button>
+        </div>
+        
+        <div class="email-list" id="emailList">
+            <div class="loading">Loading emails...</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Compose Email Modal -->
+    <div id="composeModal" class="modal">
+        <div class="modal-content">
+            <h2>Compose Email</h2>
+            <form class="compose-form" onsubmit="sendEmail(event)">
+                <input type="email" id="to" placeholder="To" required>
+                <input type="text" id="subject" placeholder="Subject" required>
+                <textarea id="body" rows="10" placeholder="Message" required></textarea>
+                <button type="submit" class="btn compose-btn">Send</button>
+                <button type="button" class="btn" onclick="closeComposeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal">
+        <div class="modal-content">
+            <h2>Reply to Email</h2>
+            <form class="compose-form" onsubmit="sendReply(event)">
+                <input type="email" id="replyTo" placeholder="To" required readonly>
+                <input type="text" id="replySubject" placeholder="Subject" required readonly>
+                <textarea id="replyBody" rows="10" placeholder="Message" required></textarea>
+                <input type="hidden" id="originalEmailId">
+                <button type="submit" class="btn compose-btn">Send Reply</button>
+                <button type="button" class="btn" onclick="closeReplyModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Detail Modal -->
+    <div id="emailDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="email-detail" id="emailDetail"></div>
+            <button class="btn" onclick="closeEmailDetailModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPageToken = null;
+        let currentEmails = [];
+
+        // Fetch emails when page loads
+        window.onload = () => loadEmails();
+
+        async function loadEmails(pageToken = null) {
+            try {
+                const response = await fetch(`/emails/30${pageToken ? `?pageToken=${pageToken}` : ''}`);
+                const data = await response.json();
+                
+                if (pageToken) {
+                    currentEmails = [...currentEmails, ...data.emails];
+                } else {
+                    currentEmails = data.emails;
+                }
+                
+                currentPageToken = data.nextPageToken;
+                displayEmails(currentEmails);
+                updatePagination();
+                
+                if (currentPageToken && currentEmails.length < 100) {
+                    await loadEmails(currentPageToken);
+                }
+            } catch (error) {
+                console.error('Error fetching emails:', error);
+                document.getElementById('emailList').innerHTML = 
+                    '<div class="email-item">Error loading emails. Please try again.</div>';
+            }
+        }
+
+        function displayEmails(emails) {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = emails.map((email, index) => `
+                <div class="email-item" id="email-${email.id}">
+                    <div class="email-content" onclick="showEmailDetail(${index})">
+                        <div class="email-subject">${getHeader(email, 'Subject') || 'No Subject'}</div>
+                        <div class="email-sender">From: ${getHeader(email, 'From') || 'Unknown Sender'}</div>
+                        <div class="email-metadata">
+                            <span class="ai-classification">Analyzing...</span>
+                            <span class="ai-importance"></span>
+                            <div class="ai-summary">Generating summary...</div>
+                        </div>
+                    </div>
+                    <div class="email-actions">
+                        <button class="btn reply-btn" onclick="openReplyModal(${index})">Reply</button>
+                        <button class="btn delete-btn" onclick="deleteEmail('${email.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Analyze each email
+            emails.forEach(async (email, index) => {
+                try {
+                    const analysis = await analyzeEmail(email.id);
+                    updateEmailWithAIAnalysis(email.id, analysis);
+                } catch (error) {
+                    console.error('Error analyzing email:', error);
+                }
+            });
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = `
+                ${currentPageToken ? 
+                    `<button class="btn" onclick="loadEmails('${currentPageToken}')">Load More</button>` 
+                    : ''}
+            `;
+        }
+
+        async function searchEmails() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) {
+                loadEmails();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/emails/search?query=${encodeURIComponent(query)}`);
+                const emails = await response.json();
+                displayEmails(emails);
+                document.getElementById('pagination').innerHTML = ''; // Hide pagination for search results
+            } catch (error) {
+                console.error('Error searching emails:', error);
+            }
+        }
+
+        function showEmailDetail(index) {
+            const email = currentEmails[index];
+            const modal = document.getElementById('emailDetailModal');
+            const detailDiv = document.getElementById('emailDetail');
+            
+            const from = getHeader(email, 'From') || 'Unknown Sender';
+            const subject = getHeader(email, 'Subject') || 'No Subject';
+            const date = getHeader(email, 'Date') || '';
+            
+            let body = '';
+            if (email.payload.body.data) {
+                body = decodeBase64(email.payload.body.data);
+            } else if (email.payload.parts) {
+                const textPart = email.payload.parts.find(part => part.mimeType === 'text/plain');
+                if (textPart && textPart.body.data) {
+                    body = decodeBase64(textPart.body.data);
+                }
+            }
+
+            detailDiv.innerHTML = `
+                <div class="email-header">
+                    <h2>${subject}</h2>
+                    <p>From: ${from}</p>
+                    <p>Date: ${date}</p>
+                </div>
+                <div class="email-body">${body}</div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function decodeBase64(data) {
+            return atob(data.replace(/-/g, '+').replace(/_/g, '/'));
+        }
+
+        function getHeader(email, name) {
+            return email.payload.headers.find(h => h.name === name)?.value;
+        }
+
+        async function openReplyModal(index) {
+            const email = currentEmails[index];
+            const modal = document.getElementById('replyModal');
+            
+            // Show loading state
+            document.getElementById('replyBody').value = 'Generating AI reply suggestion...';
+            
+            try {
+                const response = await fetch(`/emails/${email.id}/generate-reply`);
+                const { suggestedReply } = await response.json();
+                
+                document.getElementById('replyTo').value = getHeader(email, 'From');
+                document.getElementById('replySubject').value = `Re: ${getHeader(email, 'Subject')}`;
+                document.getElementById('replyBody').value = suggestedReply;
+                document.getElementById('originalEmailId').value = email.id;
+            } catch (error) {
+                console.error('Error generating reply:', error);
+                document.getElementById('replyBody').value = '';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        async function sendReply(event) {
+            event.preventDefault();
+            
+            const emailData = {
+                to: document.getElementById('replyTo').value,
+                subject: document.getElementById('replySubject').value,
+                body: document.getElementById('replyBody').value,
+                html: false
+            };
+
+            const originalEmailId = document.getElementById('originalEmailId').value;
+
+            try {
+                const response = await fetch(`/emails/${originalEmailId}/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(emailData)
+                });
+
+                if (response.ok) {
+                    alert('Reply sent successfully!');
+                    closeReplyModal();
+                    loadEmails();
+                } else {
+                    throw new Error('Failed to send reply');
+                }
+            } catch (error) {
+                alert('Error sending reply: ' + error.message);
+            }
+        }
+
+        async function deleteEmail(id) {
+            if (!confirm('Are you sure you want to delete this email?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/emails/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Email deleted successfully!');
+                    loadEmails();
+                } else {
+                    throw new Error('Failed to delete email');
+                }
+            } catch (error) {
+                alert('Error deleting email: ' + error.message);
+            }
+        }
+
+        // Modal functions
+        function openComposeModal() {
+            document.getElementById('composeModal').style.display = 'block';
+        }
+
+        function closeComposeModal() {
+            document.getElementById('composeModal').style.display = 'none';
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+        }
+
+        function closeEmailDetailModal() {
+            document.getElementById('emailDetailModal').style.display = 'none';
+        }
+
+        async function sendEmail(event) {
+            event.preventDefault();
+            
+            const emailData = {
+                to: document.getElementById('to').value,
+                subject: document.getElementById('subject').value,
+                body: document.getElementById('body').value,
+                html: false
+            };
+
+            try {
+                const response = await fetch('/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(emailData)
+                });
+
+                if (response.ok) {
+                    alert('Email sent successfully!');
+                    closeComposeModal();
+                    event.target.reset();
+                    loadEmails();
+                } else {
+                    throw new Error('Failed to send email');
+                }
+            } catch (error) {
+                alert('Error sending email: ' + error.message);
+            }
+        }
+
+        async function analyzeEmail(emailId) {
+            const response = await fetch(`/emails/${emailId}/analyze`);
+            return await response.json();
+        }
+
+        function updateEmailWithAIAnalysis(emailId, analysis) {
+            const emailElement = document.getElementById(`email-${emailId}`);
+            if (!emailElement) return;
+
+            const classificationEl = emailElement.querySelector('.ai-classification');
+            const importanceEl = emailElement.querySelector('.ai-importance');
+            const summaryEl = emailElement.querySelector('.ai-summary');
+
+            classificationEl.textContent = `Type: ${analysis.classification}`;
+            importanceEl.textContent = analysis.importance ? '🔔 Important' : '';
+            summaryEl.textContent = analysis.summary;
+
+            if (analysis.importance) {
+                emailElement.classList.add('important-email');
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = [
+                document.getElementById('composeModal'),
+                document.getElementById('replyModal'),
+                document.getElementById('emailDetailModal')
+            ];
+            
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
+</html> 

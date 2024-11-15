@@ -1,0 +1,67 @@
+# Source code
+src/
+tests/
+test/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Configuration files
+.gitignore
+.eslintrc
+.prettierrc
+.babelrc
+tsconfig.json
+jest.config.js
+.travis.yml
+.circleci/
+.github/
+
+# Documentation
+docs/
+*.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Development tools
+.vscode/
+.idea/
+.editorconfig
+.eslintignore
+.prettierignore
+
+# Environment variables
+.env*
+*.env
+
+# Build tools
+webpack.config.js
+rollup.config.js
+gulpfile.js
+
+# Misc
+.DS_Store
+*.log
+logs/
+coverage/
+.nyc_output/
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+
+# TypeScript source
+*.ts
+!*.d.ts
+
+# Development assets
+assets/
+examples/
+sample/
+
+# Git
+.git/
+.gitignore
+
+# Application specific
+data/
+tokens.json 

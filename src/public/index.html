@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gmail Integration</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .connect-button {
+        padding: 10px 20px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .connect-button:hover {
+        background-color: #357abd;
+      }
+      .description {
+        margin: 20px 0;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Connect your Gmail account</h1>
+    <div class="description">
+      <p>Connect your Gmail account to access your emails and manage them directly from this interface.</p>
+    </div>
+    <button
+      class="connect-button"
+      onclick="window.location.href='/auth/google'"
+    >
+      Connect Gmail
+    </button>
+  </body>
+</html>
