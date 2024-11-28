@@ -88,10 +88,10 @@ router.get("/auth/google/callback", async (req, res) => {
     const { emails } = await gmailService.listEmails(config.email.defaultDays);
     await storageService.saveEmails(emails);
 
-    res.redirect("/dashboard.html");
+    res.redirect("/dashboard");
   } catch (error) {
     console.error("Auth Error:", error);
-    res.redirect("/error.html");
+    res.redirect("/error");
   }
 });
 

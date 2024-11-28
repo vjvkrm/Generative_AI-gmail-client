@@ -63,6 +63,50 @@ npm run dev
 ### On clicking Reply AI will auto generate Reply , that can be edited or sent directly. 
 <img width="1299" alt="Screenshot 2024-11-15 at 09 46 34" src="https://github.com/user-attachments/assets/2aba9c9c-737c-48d4-b7cf-ce976a57d518">
 
+## Refine-based Front End
 
+The front end of this application is now built using Refine, replacing the previous static HTML files. Refine provides a more dynamic and responsive user interface for managing your Gmail account.
 
+### Key Features of the Refine-based Front End
 
+- **Dashboard**: View a list of your emails with pagination.
+- **Compose Email**: Easily compose and send new emails.
+- **Reply to Emails**: Reply to received emails with AI-generated suggestions.
+- **Delete Emails**: Delete unwanted emails.
+- **AI Analysis**: Get AI-generated analysis and summaries of your emails.
+
+### Running the Application
+
+To run the application with the new Refine-based front end, follow these steps:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/vjvkrm/Generative_AI-gmail-client.git
+   cd Generative_AI-gmail-client
+   ```
+
+2. Install the dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:3000` to access the application.
+
+### Screenshots
+
+#### Login Page
+![Login Page](https://github.com/user-attachments/assets/13fd7504-de46-4c89-bf01-f90450b7e86b)
+
+#### Dashboard
+![Dashboard](https://github.com/user-attachments/assets/835b22e7-10bf-4cb9-8843-b6002ab28809)
+
+#### Email Analysis
+![Email Analysis](https://github.com/user-attachments/assets/611d8f9d-18b4-4d55-a5b8-2ec9d24fdb7e)
+
+#### Reply to Email
+![Reply to Email](https://github.com/user-attachments/assets/2aba9c9c-737c-48d4-b7cf-ce976a57d518)
